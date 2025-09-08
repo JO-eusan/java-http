@@ -2,6 +2,7 @@ package org.apache.coyote.http11;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.techcourse.model.User;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
@@ -89,7 +90,7 @@ class Http11ProcessorTest {
     }
 
     @Test
-    @DisplayName("로그인 실패 시 /404.html을 Location 헤더에 담아 리다이렉트한다.")
+    @DisplayName("로그인 실패 시 /401.html을 Location 헤더에 담아 리다이렉트한다.")
     void login_fail() throws IOException {
         // given
         String requestBody = "account=gugu&password=failPassword";
@@ -112,7 +113,7 @@ class Http11ProcessorTest {
         String successOutput = socket.output();
         System.out.println(successOutput);
         assertThat(successOutput).contains("HTTP/1.1 302 Found");
-        assertThat(successOutput).contains("Location: /404.html");
+        assertThat(successOutput).contains("Location: /401.html");
     }
 
     @Test
@@ -168,5 +169,37 @@ class Http11ProcessorTest {
         assertThat(response).contains("HTTP/1.1 302 Found");
         assertThat(response).contains("Location: /index.html");
         assertThat(response).containsPattern("Set-Cookie: JSESSIONID=[\\w\\-]+");
+    }
+
+    @Test
+    @DisplayName("로그인된 상태에서 /login GET 요청 시 /index.html로 리다이렉트된다")
+    void login_get_withJSessionId_redirectsToIndex() throws IOException {
+        // given
+        String sessionId = "test-session-id";
+        Session session = new Session(sessionId);
+        User user = new User(1L, "gugu", "password", "hkkang@woowahan.com");
+        session.setAttribute("user", user);
+        SessionManager.add(session);
+
+        String httpRequest = String.join("\r\n",
+                "GET /login HTTP/1.1",
+                "Host: localhost:8080",
+                "Connection: keep-alive",
+                "Cookie: JSESSIONID=" + sessionId,
+                "",
+                "");
+
+        StubSocket socket = new StubSocket(httpRequest);
+        Http11Processor processor = new Http11Processor(socket);
+
+        // when
+        processor.process(socket);
+
+        // then
+        String response = socket.output();
+        System.out.println(response);
+
+        assertThat(response).contains("HTTP/1.1 302 Found");
+        assertThat(response).contains("Location: /index.html");
     }
 }

@@ -6,7 +6,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 public class HttpCookie {
-    // yummy_cookie=choco; tasty_cookie=strawberry; JSESSIONID=656cef62-e3c4-40bc-a8df-94732920ed46
+
     private final Map<String, String> cookies;
 
     private HttpCookie(Map<String, String> cookies) {
@@ -29,11 +29,15 @@ public class HttpCookie {
         return UUID.randomUUID().toString();
     }
 
-    public Optional<String> getValue(String key) {
-        return Optional.ofNullable(cookies.get(key));
+    public static Optional<String> getSessionId(String cookieHeader) {
+        if (cookieHeader == null || cookieHeader.isBlank()) {
+            return Optional.empty();
+        }
+        HttpCookie cookie = HttpCookie.from(cookieHeader);
+        return cookie.getValue("JSESSIONID");
     }
 
-    public static String buildSetCookieHeader(String key, String value) {
-        return key + "=" + value + "; Path=/; HttpOnly";
+    private Optional<String> getValue(String key) {
+        return Optional.ofNullable(cookies.get(key));
     }
 }

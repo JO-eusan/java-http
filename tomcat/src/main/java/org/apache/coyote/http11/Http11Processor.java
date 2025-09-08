@@ -15,6 +15,7 @@ import java.nio.file.Path;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import org.apache.coyote.Processor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -72,14 +73,14 @@ public class Http11Processor implements Runnable, Processor {
         String body = null;
         if (headers.containsKey("Content-Length")) {
             int contentLength = Integer.parseInt(headers.get("Content-Length"));
-            char[] bodyChars = new char[contentLength];
-            int readCount = reader.read(bodyChars, 0, contentLength);
+            char[] buffer = new char[contentLength];
+            int readCount = reader.read(buffer, 0, contentLength);
             if (readCount > 0) {
-                body = new String(bodyChars, 0, readCount);
+                body = new String(buffer, 0, readCount);
             }
         }
 
-        return HttpRequest.from(method, uri, body);
+        return HttpRequest.from(method, uri, headers, body);
     }
 
     private HttpResponse createHttpResponse(HttpRequest request) throws IOException {
@@ -89,8 +90,17 @@ public class Http11Processor implements Runnable, Processor {
         if (requestURI.equals("/")) {
             return HttpResponse.ok(requestURI, "Hello world!");
         }
-
-        if (requestURI.equals("/login") || requestURI.equals("/register")) {
+        if (requestURI.equals("/login")) {
+            Optional<String> jsessionId = HttpCookie.getSessionId(request.getHeaders().get("Cookie"));
+            if (jsessionId.isPresent()) {
+                Session session = SessionManager.findSession(jsessionId.get());
+                if (session != null && session.getAttribute("user") != null) {
+                    return HttpResponse.redirect("/index.html");
+                }
+            }
+            return handleFormRequest(requestURI, requestMethod, request);
+        }
+        if (requestURI.equals("/register")) {
             return handleFormRequest(requestURI, requestMethod, request);
         }
         return HttpResponse.ok(requestURI, readResourceWithFallback(requestURI));
@@ -175,6 +185,10 @@ public class Http11Processor implements Runnable, Processor {
 
     private HttpResponse createCookie(User user) {
         String sessionId = HttpCookie.generateSessionId();
+        Session session = new Session(sessionId);
+        session.setAttribute("user", user);
+        SessionManager.add(session);
+
         HttpResponse response = HttpResponse.redirect("/index.html");
         response.addHeader("Set-Cookie", "JSESSIONID=" + sessionId);
         return response;

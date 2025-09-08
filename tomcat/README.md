@@ -19,3 +19,6 @@
   - 회원가입 완료 시 `index.html`로 리다이렉트
 - [x] HTTP Request Header의 Cookie에 `JSESSIONID`가 없으면 응답 헤어데 `Set-Cookie`를 반환할 수 있다.
   - 로그인 페이지에서 로그인 후 Cookies 확인
+- [x] `JSESSIONID`를 이용하여 로그인 여부 체크
+  - 로그인 성공 시 Session 객체의 값으로 `User` 객체 저장
+  - 이미 로그인 된 상태라면 로그인 페이지 접근 시 `index.html`로 리다이렉트 처리
