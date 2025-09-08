@@ -151,7 +151,7 @@ public class Http11Processor implements Runnable, Processor {
                     bodyParams.get("password")
             );
             log.info(user.toString());
-            return HttpResponse.redirect("/index.html");
+            return createCookie(user);
         } catch (IllegalArgumentException e) {
             log.warn("로그인 실패: {}", e.getMessage());
             return HttpResponse.redirect("/401.html");
@@ -166,10 +166,17 @@ public class Http11Processor implements Runnable, Processor {
                     bodyParams.get("email")
             );
             log.info(user.toString());
-            return HttpResponse.redirect("/index.html");
+            return createCookie(user);
         } catch (Exception e) {
             log.warn("회원가입 실패: {}", e.getMessage());
             return HttpResponse.redirect("/404.html");
         }
+    }
+
+    private HttpResponse createCookie(User user) {
+        String sessionId = HttpCookie.generateSessionId();
+        HttpResponse response = HttpResponse.redirect("/index.html");
+        response.addHeader("Set-Cookie", "JSESSIONID=" + sessionId);
+        return response;
     }
 }

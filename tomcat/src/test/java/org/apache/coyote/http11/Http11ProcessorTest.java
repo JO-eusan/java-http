@@ -2,8 +2,6 @@ package org.apache.coyote.http11;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.techcourse.db.InMemoryUserRepository;
-import com.techcourse.model.User;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
@@ -142,5 +140,33 @@ class Http11ProcessorTest {
         System.out.println(successOutput);
         assertThat(successOutput).contains("HTTP/1.1 302 Found");
         assertThat(successOutput).contains("Location: /index.html");
+    }
+
+    @Test
+    @DisplayName("로그인 성공 시 JSESSIONID 쿠키를 발급한다")
+    void login_setCookie() throws IOException {
+        // given
+        String requestBody = "account=gugu&password=password";
+        String loginRequest = String.join("\r\n",
+                "POST /login HTTP/1.1 ",
+                "Host: localhost:8080 ",
+                "Connection: keep-alive ",
+                "Content-Length: " + requestBody.length() + " ",
+                "",
+                requestBody);
+
+        StubSocket socket = new StubSocket(loginRequest);
+        Http11Processor processor = new Http11Processor(socket);
+
+        // when
+        processor.process(socket);
+
+        // then
+        String response = socket.output();
+        System.out.println(response);
+
+        assertThat(response).contains("HTTP/1.1 302 Found");
+        assertThat(response).contains("Location: /index.html");
+        assertThat(response).containsPattern("Set-Cookie: JSESSIONID=[\\w\\-]+");
     }
 }

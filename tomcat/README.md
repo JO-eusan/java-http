@@ -17,3 +17,5 @@
 - [x] 회원가입 페이지(html)을 응답할 수 있다.
   - http://localhost:8080/register
   - 회원가입 완료 시 `index.html`로 리다이렉트
+- [x] HTTP Request Header의 Cookie에 `JSESSIONID`가 없으면 응답 헤어데 `Set-Cookie`를 반환할 수 있다.
+  - 로그인 페이지에서 로그인 후 Cookies 확인

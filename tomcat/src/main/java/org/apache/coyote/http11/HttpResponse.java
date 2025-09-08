@@ -44,7 +44,7 @@ public class HttpResponse {
         return "text/html";
     }
 
-    private void addHeader(String key, String value) {
+    public void addHeader(String key, String value) {
         headers.put(key, value);
     }
 
