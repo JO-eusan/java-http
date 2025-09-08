@@ -64,24 +64,35 @@ public class Http11Processor implements Runnable, Processor {
     }
 
     private HttpResponse createHttpResponse(String requestURI) throws IOException {
-        if (requestURI.equals("/")) {
-            return HttpResponse.from(requestURI, "Hello world!");
-        }
-
         int queryIndex = requestURI.indexOf("?");
 
-        if (queryIndex == -1) {
-            return HttpResponse.from(requestURI, readResourceFile("static" + requestURI));
+        if (requestURI.equals("/")) {
+            return HttpResponse.from(StatusCode.OK, requestURI, "Hello world!");
         }
-        String path = requestURI.substring(0, queryIndex);
-        Map<String, String> queryStrings = parseQueryStrings(requestURI, queryIndex);
-        checkUser(queryStrings);
 
-        return HttpResponse.from(requestURI, readResourceFile("static" + path + ".html"));
+        String path = requestURI;
+        Map<String, String> queryStrings = new HashMap<>();
+
+        if (queryIndex != -1) {
+            path = requestURI.substring(0, queryIndex);
+            queryStrings = parseQueryStrings(requestURI, queryIndex);
+        }
+
+        if (path.equals("/login")) {
+            if (queryStrings.isEmpty()) {
+                return HttpResponse.from(StatusCode.OK, "/login", readResourceFile("static/login.html"));
+            } else {
+                return login(queryStrings);
+            }
+        }
+        return HttpResponse.from(StatusCode.OK, requestURI, readResourceFile("static" + path));
     }
 
     private String readResourceFile(String path) throws IOException {
         URL resource = getClass().getClassLoader().getResource(path);
+        if (resource == null) {
+            throw new IOException("Resource not found: " + path);
+        }
         Path filePath = new File(resource.getPath()).toPath();
         return Files.readString(filePath);
     }
@@ -97,13 +108,18 @@ public class Http11Processor implements Runnable, Processor {
         return result;
     }
 
-    private void checkUser(Map<String, String> queryStrings) {
-        User user = InMemoryUserRepository.findByAccount(queryStrings.get("account"))
-                .orElseThrow(IllegalArgumentException::new);
-
-        if (!user.checkPassword(queryStrings.get("password"))) {
-            throw new IllegalArgumentException();
+    private HttpResponse login(Map<String, String> queryStrings) throws IOException {
+        try {
+            User user = InMemoryUserRepository.findByAccount(queryStrings.get("account"))
+                    .orElseThrow(IllegalArgumentException::new);
+            if (!user.checkPassword(queryStrings.get("password"))) {
+                throw new IllegalArgumentException();
+            }
+            log.info(user.toString());
+            return HttpResponse.redirect("/index.html");
+        } catch (IllegalArgumentException e) {
+            log.warn("로그인 실패: {}", e.getMessage());
+            return HttpResponse.redirect("/404.html");
         }
-        log.info(user.toString());
     }
 }
