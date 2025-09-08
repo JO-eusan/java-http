@@ -2,6 +2,8 @@ package org.apache.coyote.http11;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.techcourse.db.InMemoryUserRepository;
+import com.techcourse.model.User;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
@@ -65,12 +67,15 @@ class Http11ProcessorTest {
     @DisplayName("로그인 성공 시 /index.html을 Location 헤더에 담아 리다이렉트한다.")
     void login_success() throws IOException {
         // given
+        String requestBody = "account=gugu&password=password";
+
         String loginRequestSuccess = String.join("\r\n",
-                "GET /login?account=gugu&password=password HTTP/1.1 ",
+                "POST /login HTTP/1.1 ",
                 "Host: localhost:8080 ",
                 "Connection: keep-alive ",
+                "Content-Length: " + requestBody.length() + " ",
                 "",
-                "");
+                requestBody);
 
         StubSocket socket = new StubSocket(loginRequestSuccess);
         Http11Processor processor = new Http11Processor(socket);
@@ -81,7 +86,7 @@ class Http11ProcessorTest {
         // then
         String successOutput = socket.output();
         System.out.println(successOutput);
-        assertThat(successOutput).contains("HTTP/1.1 302 FOUND");
+        assertThat(successOutput).contains("HTTP/1.1 302 Found");
         assertThat(successOutput).contains("Location: /index.html");
     }
 
@@ -89,12 +94,15 @@ class Http11ProcessorTest {
     @DisplayName("로그인 실패 시 /404.html을 Location 헤더에 담아 리다이렉트한다.")
     void login_fail() throws IOException {
         // given
+        String requestBody = "account=gugu&password=failPassword";
+
         String loginRequestSuccess = String.join("\r\n",
-                "GET /login?account=gugu&password=fail_password HTTP/1.1 ",
+                "POST /login HTTP/1.1 ",
                 "Host: localhost:8080 ",
                 "Connection: keep-alive ",
+                "Content-Length: " + requestBody.length() + " ",
                 "",
-                "");
+                requestBody);
 
         StubSocket socket = new StubSocket(loginRequestSuccess);
         Http11Processor processor = new Http11Processor(socket);
@@ -105,7 +113,34 @@ class Http11ProcessorTest {
         // then
         String successOutput = socket.output();
         System.out.println(successOutput);
-        assertThat(successOutput).contains("HTTP/1.1 302 FOUND");
+        assertThat(successOutput).contains("HTTP/1.1 302 Found");
         assertThat(successOutput).contains("Location: /404.html");
+    }
+
+    @Test
+    @DisplayName("회원가입 성공 시 /index.html을 Location 헤더에 담아 리다이렉트한다.")
+    void signup_success() throws IOException {
+        // given
+        String requestBody = "account=newGugu&password=password&email=hkkang@woowahan.com";
+
+        String loginRequestSuccess = String.join("\r\n",
+                "POST /register HTTP/1.1 ",
+                "Host: localhost:8080 ",
+                "Connection: keep-alive ",
+                "Content-Length: " + requestBody.length() + " ",
+                "",
+                requestBody);
+
+        StubSocket socket = new StubSocket(loginRequestSuccess);
+        Http11Processor processor = new Http11Processor(socket);
+
+        // when
+        processor.process(socket);
+
+        // then
+        String successOutput = socket.output();
+        System.out.println(successOutput);
+        assertThat(successOutput).contains("HTTP/1.1 302 Found");
+        assertThat(successOutput).contains("Location: /index.html");
     }
 }

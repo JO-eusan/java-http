@@ -14,3 +14,6 @@
 - [x] 로그인 성공 여부에 따라 다른 페이지로 리다이렉트(status code 302) 한다.
   - 로그인 성공 시, `/index.html`
   - 로그인 실패 시, `401.html`
+- [x] 회원가입 페이지(html)을 응답할 수 있다.
+  - http://localhost:8080/register
+  - 회원가입 완료 시 `index.html`로 리다이렉트
