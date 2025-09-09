@@ -33,7 +33,6 @@ public class HttpResponse {
     public static HttpResponse notFound(String body) {
         HttpResponse response = new HttpResponse(StatusCode.NOT_FOUND, body);
         response.addHeader("Content-Type", "text/html;charset=utf-8");
-        response.addHeader("Content-Length", "0");
         return response;
     }
 
@@ -49,11 +48,14 @@ public class HttpResponse {
     }
 
     public String toHttpMessage() {
-        String headerString = headers.entrySet().stream()
-                .map(entry -> entry.getKey() + ": " + entry.getValue() + " ")
-                .collect(Collectors.joining("\r\n"));
-        return "HTTP/1.1 " + statusCode.getStatusCode() + " \r\n" +
-                headerString + "\r\n\r\n" +
-                body;
+        String headerString =
+                headers.entrySet().stream()
+                        .map(entry -> entry.getKey() + ": " + entry.getValue() + " ")
+                        .collect(Collectors.joining("\r\n"));
+        return String.join("\r\n",
+                "HTTP/1.1 " + statusCode.getStatusCode() + " ",
+                headerString,
+                "",
+                body);
     }
 }
