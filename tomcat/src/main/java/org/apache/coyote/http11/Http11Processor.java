@@ -16,6 +16,8 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import org.apache.catalina.session.Session;
+import org.apache.catalina.session.SessionManager;
 import org.apache.coyote.Processor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -93,7 +95,7 @@ public class Http11Processor implements Runnable, Processor {
         if (requestURI.equals("/login")) {
             Optional<String> jsessionId = HttpCookie.getSessionId(request.getHeaders().get("Cookie"));
             if (jsessionId.isPresent()) {
-                Session session = SessionManager.findSession(jsessionId.get());
+                Session session = SessionManager.getInstance().findSession(jsessionId.get());
                 if (session != null && session.getAttribute("user") != null) {
                     return HttpResponse.redirect("/index.html");
                 }
@@ -187,7 +189,7 @@ public class Http11Processor implements Runnable, Processor {
         String sessionId = HttpCookie.generateSessionId();
         Session session = new Session(sessionId);
         session.setAttribute("user", user);
-        SessionManager.add(session);
+        SessionManager.getInstance().add(session);
 
         HttpResponse response = HttpResponse.redirect("/index.html");
         response.addHeader("Set-Cookie", "JSESSIONID=" + sessionId);

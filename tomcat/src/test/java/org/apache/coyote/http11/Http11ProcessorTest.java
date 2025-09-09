@@ -7,6 +7,8 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.nio.file.Files;
+import org.apache.catalina.session.Session;
+import org.apache.catalina.session.SessionManager;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import support.StubSocket;
@@ -179,7 +181,7 @@ class Http11ProcessorTest {
         Session session = new Session(sessionId);
         User user = new User(1L, "gugu", "password", "hkkang@woowahan.com");
         session.setAttribute("user", user);
-        SessionManager.add(session);
+        SessionManager.getInstance().add(session);
 
         String httpRequest = String.join("\r\n",
                 "GET /login HTTP/1.1",
