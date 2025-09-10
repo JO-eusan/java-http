@@ -3,11 +3,9 @@ package org.apache.coyote.http11;
 import com.techcourse.exception.UncheckedServletException;
 import com.techcourse.model.User;
 import com.techcourse.service.AuthService;
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.net.Socket;
 import java.net.URL;
 import java.net.URLDecoder;
@@ -17,10 +15,10 @@ import java.nio.file.Path;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Optional;
 import org.apache.catalina.session.Session;
 import org.apache.catalina.session.SessionManager;
 import org.apache.coyote.Processor;
+import org.apache.coyote.http11.message.HttpRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -45,7 +43,7 @@ public class Http11Processor implements Runnable, Processor {
         try (final var inputStream = connection.getInputStream();
              final var outputStream = connection.getOutputStream()) {
 
-            HttpRequest request = extractHttpRequest(inputStream);
+            HttpRequest request = HttpRequest.of(readRequestMessage(inputStream));
             HttpResponse response = createHttpResponse(request);
 
             outputStream.write(response.toHttpMessage().getBytes());
@@ -55,57 +53,34 @@ public class Http11Processor implements Runnable, Processor {
         }
     }
 
-    private HttpRequest extractHttpRequest(InputStream inputStream) throws IOException {
-        BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
-
-        String startLine = reader.readLine();
-        if (startLine == null || startLine.isBlank()) {
-            throw new IOException("빈 요청이 수신되었습니다.");
-        }
-        String[] parts = startLine.split(" ");
-        String method = parts[0];
-        String uri = parts[1];
-
-        Map<String, String> headers = new HashMap<>();
-        for (String headerLine; (headerLine = reader.readLine()) != null && !headerLine.isEmpty(); ) {
-            int colonIndex = headerLine.indexOf(":");
-            if (colonIndex != -1) {
-                headers.put(
-                        headerLine.substring(0, colonIndex).trim(),
-                        headerLine.substring(colonIndex + 1).trim()
-                );
-            }
-        }
-
-        String body = null;
-        if (headers.containsKey("Content-Length")) {
-            int contentLength = Integer.parseInt(headers.get("Content-Length"));
-            char[] buffer = new char[contentLength];
-            int readCount = reader.read(buffer, 0, contentLength);
-            if (readCount > 0) {
-                body = new String(buffer, 0, readCount);
-            }
-        }
-
-        return HttpRequest.from(method, uri, headers, body);
+    private String readRequestMessage(InputStream inputStream) throws IOException {
+        byte[] bytes = inputStream.readAllBytes();
+        return new String(bytes, StandardCharsets.UTF_8);
     }
 
     private HttpResponse createHttpResponse(HttpRequest request) throws IOException {
-        String requestURI = request.getURI();
-        String requestMethod = request.getMethod();
+        String requestURI = request.getRequestLine().getPath();
+        String requestMethod = request.getRequestLine().getMethod();
 
         if (requestURI.equals("/")) {
             return HttpResponse.ok(requestURI, "Hello world!");
         }
         if (requestURI.equals("/login")) {
-            Optional<String> jsessionId = HttpCookie.getSessionId(request.getHeaders().get("Cookie"));
-            if (jsessionId.isPresent()) {
-                Session session = SessionManager.getInstance().findSession(jsessionId.get());
-                if (session != null && session.getAttribute("user") != null) {
-                    return HttpResponse.redirect("/index.html");
-                }
+            if (requestMethod.equals("POST")) {
+                return handleFormRequest(requestURI, requestMethod, request);
             }
-            return handleFormRequest(requestURI, requestMethod, request);
+            return request.getHeaders().get("Cookie")
+                    .flatMap(HttpCookie::getSessionId)
+                    .map(SessionManager.getInstance()::findSession)
+                    .filter(session -> session != null && session.getAttribute("user") != null)
+                    .map(session -> HttpResponse.redirect("/index.html"))
+                    .orElseGet(() -> {
+                        try {
+                            return handleFormRequest(requestURI, requestMethod, request);
+                        } catch (IOException e) {
+                            throw new RuntimeException(e);
+                        }
+                    });
         }
         if (requestURI.equals("/register")) {
             return handleFormRequest(requestURI, requestMethod, request);
