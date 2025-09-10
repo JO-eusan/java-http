@@ -59,18 +59,21 @@ public class Http11Processor implements Runnable, Processor {
         BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
 
         String startLine = reader.readLine();
+        if (startLine == null || startLine.isBlank()) {
+            throw new IOException("빈 요청이 수신되었습니다.");
+        }
         String[] parts = startLine.split(" ");
         String method = parts[0];
         String uri = parts[1];
 
         Map<String, String> headers = new HashMap<>();
-        String line;
-        while ((line = reader.readLine()) != null && !line.isEmpty()) {
-            int colonIndex = line.indexOf(":");
+        for (String headerLine; (headerLine = reader.readLine()) != null && !headerLine.isEmpty(); ) {
+            int colonIndex = headerLine.indexOf(":");
             if (colonIndex != -1) {
-                String headerName = line.substring(0, colonIndex).trim();
-                String headerValue = line.substring(colonIndex + 1).trim();
-                headers.put(headerName, headerValue);
+                headers.put(
+                        headerLine.substring(0, colonIndex).trim(),
+                        headerLine.substring(colonIndex + 1).trim()
+                );
             }
         }
 
