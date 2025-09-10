@@ -1,5 +1,9 @@
 package org.apache.coyote.http11.message;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -16,27 +20,35 @@ public class HttpRequest {
         this.body = body;
     }
 
-    public static HttpRequest of(String request) {
-        String[] parts = request.split("\r\n\r\n", 2);
-        String headerPart = parts[0];
-        String bodyPart = parts.length > 1
-                ? parts[1]
-                : null;
+    public static HttpRequest of(InputStream inputStream) throws IOException {
+        BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
 
-        String[] lines = headerPart.split("\r\n");
-        RequestLine requestLine = RequestLine.from(lines[0]);
+        String startLine = reader.readLine();
+        if (startLine == null || startLine.isBlank()) {
+            throw new IOException("빈 요청이 수신되었습니다.");
+        }
 
-        Map<String, String> headerLines = new HashMap<>();
-        for (int i = 1; i < lines.length; i++) {
-            String line = lines[i];
-            System.out.println(line);
-            int idx = line.indexOf(":");
-            if (idx != -1) {
-                headerLines.put(line.substring(0, idx).trim(), line.substring(idx + 1).trim());
+        Map<String, String> headers = new HashMap<>();
+        for (String headerLine; (headerLine = reader.readLine()) != null && !headerLine.isEmpty(); ) {
+            int colonIndex = headerLine.indexOf(":");
+            if (colonIndex != -1) {
+                headers.put(
+                        headerLine.substring(0, colonIndex).trim(),
+                        headerLine.substring(colonIndex + 1).trim()
+                );
             }
         }
 
-        return new HttpRequest(requestLine, Headers.of(headerLines), bodyPart);
+        String body = null;
+        if (headers.containsKey("Content-Length")) {
+            int contentLength = Integer.parseInt(headers.get("Content-Length"));
+            char[] buffer = new char[contentLength];
+            int readCount = reader.read(buffer, 0, contentLength);
+            if (readCount > 0) {
+                body = new String(buffer, 0, readCount);
+            }
+        }
+        return new HttpRequest(RequestLine.from(startLine), Headers.of(headers), body);
     }
 
     public RequestLine getRequestLine() {
