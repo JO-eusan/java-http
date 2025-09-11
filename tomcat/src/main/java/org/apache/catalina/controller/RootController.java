@@ -6,8 +6,7 @@ import org.apache.coyote.http11.message.HttpResponse;
 public class RootController extends AbstractController {
 
     @Override
-    protected HttpResponse doGet(HttpRequest request) {
-
+    public HttpResponse doGet(HttpRequest request) {
         return HttpResponse.ok(request.getRequestLine().getPath(), "Hello world!");
     }
 }

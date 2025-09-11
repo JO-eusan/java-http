@@ -8,12 +8,12 @@ import org.apache.catalina.util.ResourceLoader;
 public class DefaultController extends AbstractController {
 
     @Override
-    protected HttpResponse doPost(HttpRequest request) throws IOException {
+    public HttpResponse doPost(HttpRequest request) throws IOException {
         return HttpResponse.notFound(ResourceLoader.readWithFallback("/404.html"));
     }
 
     @Override
-    protected HttpResponse doGet(HttpRequest request) throws IOException {
+    public HttpResponse doGet(HttpRequest request) throws IOException {
         String path = request.getRequestLine().getPath();
         try {
             return HttpResponse.ok(path, ResourceLoader.readWithFallback(path));

@@ -4,6 +4,7 @@ import static org.reflections.Reflections.log;
 
 import com.techcourse.model.User;
 import com.techcourse.service.AuthService;
+import java.io.IOException;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
@@ -19,7 +20,7 @@ import org.apache.catalina.util.ResourceLoader;
 public class LoginController extends AbstractController {
 
     @Override
-    protected HttpResponse doPost(HttpRequest request) throws Exception {
+    public HttpResponse doPost(HttpRequest request) {
         Map<String, String> bodyParams = parseRequestBody(request.getBody());
         try {
             User user = AuthService.login(
@@ -35,7 +36,7 @@ public class LoginController extends AbstractController {
     }
 
     @Override
-    protected HttpResponse doGet(HttpRequest request) throws Exception {
+    public HttpResponse doGet(HttpRequest request) throws IOException {
         String path = request.getRequestLine().getPath();
         return request.getHeaders().get("Cookie")
                 .flatMap(HttpCookie::getSessionId)

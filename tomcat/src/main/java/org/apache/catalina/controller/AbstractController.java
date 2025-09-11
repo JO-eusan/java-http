@@ -1,5 +1,6 @@
 package org.apache.catalina.controller;
 
+import java.io.IOException;
 import org.apache.catalina.Controller;
 import org.apache.coyote.http11.message.HttpRequest;
 import org.apache.coyote.http11.message.HttpResponse;
@@ -7,25 +8,15 @@ import org.apache.coyote.http11.message.HttpResponse;
 public abstract class AbstractController implements Controller {
 
     @Override
-    public HttpResponse service(HttpRequest request) throws Exception {
-        switch (request.getRequestLine().getMethod()) {
-            case "GET" -> {
-                return doGet(request);
-            }
-            case "POST" -> {
-                return doPost(request);
-            }
-            default -> {
-                return HttpResponse.notFound("지원하지 않는 메서드입니다.");
-            }
-        }
+    public HttpResponse service(HttpRequest request) {
+        return request.getRequestLine().getMethod().handle(this, request);
     }
 
-    protected HttpResponse doGet(HttpRequest request) throws Exception {
+    public HttpResponse doGet(HttpRequest request) throws IOException {
         return HttpResponse.notFound("GET method not implemented");
     }
 
-    protected HttpResponse doPost(HttpRequest request) throws Exception {
+    public HttpResponse doPost(HttpRequest request) throws IOException {
         return HttpResponse.notFound("POST method not implemented");
     }
 }

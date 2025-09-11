@@ -9,12 +9,12 @@ import java.util.Optional;
 
 public class RequestLine {
 
-    private final String method;
+    private final HttpMethod method;
     private final String path;
     private final String protocol;
     private final Map<String, String> queryParams;
 
-    private RequestLine(String method, String path, String protocol, Map<String, String> queryParams) {
+    private RequestLine(HttpMethod method, String path, String protocol, Map<String, String> queryParams) {
         this.method = method;
         this.path = path;
         this.protocol = protocol;
@@ -38,7 +38,7 @@ public class RequestLine {
         String path = extractPath(uri, queryIndex);
         Map<String, String> queryParams = extractQueryParams(uri, queryIndex);
 
-        return new RequestLine(method, path, protocol, queryParams);
+        return new RequestLine(HttpMethod.from(method), path, protocol, queryParams);
     }
 
     private static String extractPath(String uri, int queryIndex) {
@@ -69,7 +69,7 @@ public class RequestLine {
         return result;
     }
 
-    public String getMethod() {
+    public HttpMethod getMethod() {
         return method;
     }
 
