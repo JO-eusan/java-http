@@ -28,3 +28,7 @@
 - [x] HttpRequest 클래스 구현하기
 - [x] HttpResponse 클래스 구현하기
 - [x] Controller 인터페이스 추가하기
+
+### 4. 동시성 확장하기
+
+- [x] Executors로 Thread Pool 적용
