@@ -1,7 +1,11 @@
-package org.apache.coyote.controller;
+package org.apache.catalina;
 
 import java.util.HashMap;
 import java.util.Map;
+import org.apache.catalina.controller.DefaultController;
+import org.apache.catalina.controller.LoginController;
+import org.apache.catalina.controller.RegisterController;
+import org.apache.catalina.controller.RootController;
 import org.apache.coyote.http11.message.HttpRequest;
 
 public class RequestMapping {

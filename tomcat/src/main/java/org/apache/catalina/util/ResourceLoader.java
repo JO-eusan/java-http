@@ -1,4 +1,4 @@
-package org.apache.coyote.util;
+package org.apache.catalina.util;
 
 import java.io.IOException;
 import java.net.URL;

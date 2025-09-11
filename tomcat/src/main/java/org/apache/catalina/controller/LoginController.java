@@ -1,4 +1,4 @@
-package org.apache.coyote.controller;
+package org.apache.catalina.controller;
 
 import static org.reflections.Reflections.log;
 
@@ -14,7 +14,7 @@ import org.apache.catalina.session.SessionManager;
 import org.apache.coyote.http11.HttpCookie;
 import org.apache.coyote.http11.message.HttpRequest;
 import org.apache.coyote.http11.message.HttpResponse;
-import org.apache.coyote.util.ResourceLoader;
+import org.apache.catalina.util.ResourceLoader;
 
 public class LoginController extends AbstractController {
 

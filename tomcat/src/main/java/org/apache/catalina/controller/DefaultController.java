@@ -1,9 +1,9 @@
-package org.apache.coyote.controller;
+package org.apache.catalina.controller;
 
 import java.io.IOException;
 import org.apache.coyote.http11.message.HttpRequest;
 import org.apache.coyote.http11.message.HttpResponse;
-import org.apache.coyote.util.ResourceLoader;
+import org.apache.catalina.util.ResourceLoader;
 
 public class DefaultController extends AbstractController {
 

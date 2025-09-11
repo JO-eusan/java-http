@@ -2,8 +2,8 @@ package org.apache.coyote.http11;
 
 import java.net.Socket;
 import org.apache.coyote.Processor;
-import org.apache.coyote.controller.Controller;
-import org.apache.coyote.controller.RequestMapping;
+import org.apache.catalina.Controller;
+import org.apache.catalina.RequestMapping;
 import org.apache.coyote.http11.message.HttpRequest;
 import org.apache.coyote.http11.message.HttpResponse;
 import org.slf4j.Logger;
