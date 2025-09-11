@@ -1,18 +1,20 @@
-package org.apache.coyote.http11;
+package org.apache.coyote.http11.message;
 
 import java.util.LinkedHashMap;
-import java.util.Map;
 import java.util.stream.Collectors;
+import org.apache.coyote.http11.StatusCode;
 
 public class HttpResponse {
 
+    private String protocol = "HTTP/1.1";
     private final StatusCode statusCode;
-    private final Map<String, String> headers = new LinkedHashMap<>();
+    private final Headers headers;
     private final String body;
 
     private HttpResponse(StatusCode statusCode, String body) {
         this.statusCode = statusCode;
         this.body = body;
+        this.headers = Headers.of(new LinkedHashMap<>());
     }
 
     public static HttpResponse ok(String requestURI, String body) {
@@ -33,6 +35,7 @@ public class HttpResponse {
     public static HttpResponse notFound(String body) {
         HttpResponse response = new HttpResponse(StatusCode.NOT_FOUND, body);
         response.addHeader("Content-Type", "text/html;charset=utf-8");
+        response.addHeader("Content-Length", String.valueOf(body.getBytes().length));
         return response;
     }
 
@@ -44,18 +47,29 @@ public class HttpResponse {
     }
 
     public void addHeader(String key, String value) {
-        headers.put(key, value);
+        headers.add(key, value);
     }
 
-    public String toHttpMessage() {
-        String headerString =
-                headers.entrySet().stream()
-                        .map(entry -> entry.getKey() + ": " + entry.getValue() + " ")
-                        .collect(Collectors.joining("\r\n"));
+    public String toMessage() {
+        String headerString = headers.asMap().entrySet().stream()
+                .map(e -> e.getKey() + ": " + e.getValue() + " ")
+                .collect(Collectors.joining("\r\n"));
         return String.join("\r\n",
-                "HTTP/1.1 " + statusCode.getStatusCode() + " ",
+                protocol + " " + statusCode.getCode() + " " + statusCode.getText() + " ",
                 headerString,
                 "",
                 body);
+    }
+
+    public StatusCode getStatusCode() {
+        return statusCode;
+    }
+
+    public Headers getHeaders() {
+        return headers;
+    }
+
+    public String getBody() {
+        return body;
     }
 }

@@ -22,3 +22,9 @@
 - [x] `JSESSIONID`를 이용하여 로그인 여부 체크
   - 로그인 성공 시 Session 객체의 값으로 `User` 객체 저장
   - 이미 로그인 된 상태라면 로그인 페이지 접근 시 `index.html`로 리다이렉트 처리
+
+### 3. 리팩터링
+
+- [x] HttpRequest 클래스 구현하기
+- [x] HttpResponse 클래스 구현하기
+- [x] Controller 인터페이스 추가하기

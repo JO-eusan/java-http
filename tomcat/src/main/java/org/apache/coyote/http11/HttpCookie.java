@@ -17,7 +17,7 @@ public class HttpCookie {
         Map<String, String> cookiePairs = new HashMap<>();
         String[] pairs = cookieHeader.split(";");
         for (String pair : pairs) {
-            String[] keyValue = pair.trim().split("=");
+            String[] keyValue = pair.trim().split("=", 2);
             if (keyValue.length == 2) {
                 cookiePairs.put(keyValue[0], keyValue[1]);
             }

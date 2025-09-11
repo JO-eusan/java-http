@@ -13,7 +13,11 @@ public enum StatusCode {
         this.text = text;
     }
 
-    public String getStatusCode() {
-        return String.join(" ", String.valueOf(code), text);
+    public int getCode() {
+        return code;
+    }
+
+    public String getText() {
+        return text;
     }
 }
